@@ -8,13 +8,58 @@
 - "发布到小红书"
 - 或任何涉及小红书发帖的需求
 
-## 环境要求
+## 首次使用 - 必须先配置 Cookie
 
-- Python 3（标准库，无需额外安装）
-- Cookie 文件：`credentials/xhs_cookies.json`
-- 发帖脚本：`scripts/xhs_publish.py`
+**在发帖之前，先检查 Cookie 是否已配置：**
 
-## 执行流程
+```bash
+python3 scripts/xhs_publish.py --check
+```
+
+如果输出 `❌ Cookie 无效或已过期` 或文件不存在，按以下步骤引导用户配置：
+
+---
+
+### 获取小红书 Cookie（引导用户操作）
+
+告诉用户：
+
+> 需要你提供小红书的登录 Cookie，步骤如下：
+>
+> 1. 打开电脑浏览器，访问 https://creator.xiaohongshu.com
+> 2. 登录你的小红书账号
+> 3. 按 **F12** 打开开发者工具
+> 4. 切换到 **Application（应用程序）** 标签
+> 5. 左侧找到 **Cookies → https://creator.xiaohongshu.com**
+> 6. 把所有 cookie 导出为 JSON 数组格式（可以用浏览器插件 "EditThisCookie" 或 "Cookie-Editor" 导出）
+> 7. 把导出的 JSON 文件发给我
+
+收到 Cookie 文件后，保存到 `credentials/xhs_cookies.json`（如目录不存在则创建）。
+
+再次运行 `python3 scripts/xhs_publish.py --check` 验证。
+
+---
+
+## Cookie 文件格式
+
+`credentials/xhs_cookies.json` 为 JSON 数组，每个元素包含 `name` 和 `value` 字段：
+
+```json
+[
+  {"name": "a1", "value": "你的a1值"},
+  {"name": "web_session", "value": "你的web_session值"},
+  {"name": "access-token-creator.xiaohongshu.com", "value": "你的access-token值"}
+]
+```
+
+关键 Cookie：
+- `a1`：设备标识，长期有效
+- `web_session`：会话 token，有效期约1年
+- `access-token-creator.xiaohongshu.com`：创作者平台 token，有效期约1个月
+
+---
+
+## 发帖流程
 
 ### 1. 验证 Cookie
 
@@ -22,18 +67,12 @@
 python3 scripts/xhs_publish.py --check
 ```
 
-如果失败，提示用户刷新 Cookie。
-
 ### 2. 准备内容
 
-**如果用户没提供图片：**
-- 可使用 `image_synthesize` 工具生成封面图
-- 保存到 `/workspace/imgs/xhs_cover_YYYYMMDD.png`
-
-**文案要求：**
 - 标题：≤20字，吸引眼球，带 emoji
-- 正文：口语化，真实感，800-1500字
-- 标签：10-15个，覆盖核心词 + 长尾词
+- 正文：口语化，真实感，400-600字
+- 标签：10个左右，覆盖核心词 + 长尾词
+- 图片：至少1张（小红书不接受纯文字帖）
 
 ### 3. 发布
 
@@ -41,19 +80,26 @@ python3 scripts/xhs_publish.py --check
 python3 scripts/xhs_publish.py \
   --title "标题" \
   --content "正文" \
-  --tags "标签1,标签2" \
+  --tags "标签1,标签2,标签3" \
   --images "图片路径.png"
 ```
 
-### 4. 返回结果
+### 4. 私密发布（测试用）
 
-成功后返回：
-- note_id
-- 帖子链接（https://www.xiaohongshu.com/discovery/item/{note_id}）
+```bash
+python3 scripts/xhs_publish.py \
+  --title "测试" \
+  --content "测试内容" \
+  --images "图片路径.png" \
+  --private
+```
+
+---
 
 ## 注意事项
 
-- Cookie 中 `access-token` 有效期较短（约1个月），需定期刷新
+- `access-token` 有效期较短（约1个月），失效后需重新获取
 - `web_session` 有效期约1年
-- type 字段必须是字符串 `"normal"` 而非整数 `1`
-- 发帖必须带至少一张图片（纯文字帖会被拒绝）
+- 发帖必须带至少一张图片（纯文字帖会被拒绝，返回 -9999）
+- `common.type` 字段必须是字符串 `"normal"`（非整数 `1`）
+- Cookie 文件路径：`credentials/xhs_cookies.json`（相对于 workspace 根目录）

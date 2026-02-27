@@ -1,6 +1,6 @@
 # xhs-publisher Skill
 
-## 小红书云端自动发帖
+## 小红书云端全自动发帖
 
 无需浏览器，纯云端 HTTP 调用，支持图文发帖（带图片）。
 
@@ -12,41 +12,49 @@
 - ✅ 多图上传
 - ✅ Cookie 有效期验证
 
-## 使用方式
+## 快速开始
 
-### CLI
+### 第一步：配置 Cookie
+
+首次使用前需要配置你自己的小红书 Cookie：
+
+1. 打开电脑浏览器，访问 https://creator.xiaohongshu.com 并登录
+2. 按 **F12** 打开开发者工具
+3. 切换到 **Application** 标签 → 左侧 **Cookies → https://creator.xiaohongshu.com**
+4. 使用浏览器插件（推荐 [Cookie-Editor](https://cookie-editor.com/) 或 EditThisCookie）导出为 JSON 格式
+5. 保存到 `credentials/xhs_cookies.json`
+
+### 第二步：验证配置
 
 ```bash
-# 验证 Cookie 是否有效
 python3 scripts/xhs_publish.py --check
+```
 
-# 发布带图片的帖子
+输出 `✅ Cookie 有效，认证成功` 即可使用。
+
+### 第三步：发帖
+
+```bash
 python3 scripts/xhs_publish.py \
   --title "帖子标题（≤20字）" \
   --content "帖子正文内容" \
   --tags "标签1,标签2,标签3" \
   --images "封面图.png"
-
-# 私密发布（测试用）
-python3 scripts/xhs_publish.py \
-  --title "测试标题" \
-  --content "测试内容" \
-  --private
 ```
 
-### Agent 用法
+## Cookie 文件格式
 
-直接告诉 Agent：「帮我发一篇小红书，主题是 XXX」，Agent 会自动完成文案撰写、图片处理和发布。
+`credentials/xhs_cookies.json` 为 JSON 数组格式：
 
-## 配置
+```json
+[
+  {"name": "a1", "value": "..."},
+  {"name": "web_session", "value": "..."},
+  {"name": "access-token-creator.xiaohongshu.com", "value": "..."}
+]
+```
 
-Cookie 文件放在 `credentials/xhs_cookies.json`（JSON 数组格式）。
-
-获取方式：
-1. 登录 [creator.xiaohongshu.com](https://creator.xiaohongshu.com)
-2. F12 → Application → Cookies → 复制所有 cookie 为 JSON 格式保存
-
-Cookie 有效期约1年（web_session），需到期前刷新。
+> ⚠️ **注意**：Cookie 文件包含个人登录信息，请勿分享给他人，也不要提交到公开代码库。
 
 ## 技术细节
 
@@ -64,3 +72,13 @@ Cookie 有效期约1年（web_session），需到期前刷新。
 ### 发布接口
 - URL: `POST https://edith.xiaohongshu.com/web_api/sns/v2/note`
 - `common.type` 必须是字符串 `"normal"`（非整数）
+- 必须携带至少一张图片
+
+## 依赖
+
+- Python 3（标准库，无需额外安装）
+- curl（系统自带）
+
+## .gitignore
+
+`credentials/` 目录已在 `.gitignore` 中，Cookie 文件不会被提交到代码库。
